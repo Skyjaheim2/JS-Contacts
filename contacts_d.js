@@ -253,7 +253,6 @@ class Animations {
     }
 
 }
-
 // DomContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     Storage.initializeStorage()
