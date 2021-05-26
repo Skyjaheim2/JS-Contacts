@@ -1,6 +1,5 @@
 class Contacts {
     static loadContacts(filter) {
-
         let contactsContainer = document.querySelector('.contacts-container')
 
         let allContacts = Storage.getContacts().reverse()
@@ -8,7 +7,7 @@ class Contacts {
             0: 'darkblue',
             1: 'darkgreen',
             2: 'darkred',
-            3: 'darkorange'
+            3: 'darkorange',
         }
 
         if (filter === null) {
@@ -16,12 +15,13 @@ class Contacts {
             for (let contact of allContacts) {
                 contactsContainer.innerHTML += `
                     <div class="detailed-view-container" data-color="${Colors[i % Object.keys(Colors).length]}">
-                        <div class="contactInfo" style="background-color: ${Colors[i % Object.keys(Colors).length]};"> <!-- Loop the colors -->
+                        <div class="contactInfo" style="background-color: ${Colors[i % Object.keys(Colors).length]}">  <!-- LOOP THE COLORS -->
                             <div class="contactName">${contact['name']}</div>
                             <div class="contactNumberLabel">Number:</div>
                             <div class="contactNumber">${contact['number']}</div>
-                            <div class="contactAddressLabel">Address:<span class="contactAddress"> ${contact['address']}</span></div>
-                            <span><img class="deleteBtn" src="Img/delete.svg"></span>
+                            <div class="contactAddressLabel">Address: <span class="contactAddress">${contact['address']}</span></div>
+                            <span><img class="deleteBtn" src="Img/delete.svg" title="Delete Contact"></span>
+                            <span><img class="editBtn" src="Img/edit.svg" title="Edit Contact"> </span>
                         </div>
                     </div>
                 `
@@ -35,12 +35,13 @@ class Contacts {
                 if (wordsMatch(contact['name'], filter)) {
                     contactsContainer.innerHTML += `
                         <div class="detailed-view-container" data-color="${Colors[i % Object.keys(Colors).length]}">
-                            <div class="contactInfo" style="background-color: ${Colors[i % Object.keys(Colors).length]};">
-                               <div class="contactName">${contact['name']}</div>
+                            <div class="contactInfo" style="background-color: ${Colors[i % Object.keys(Colors).length]}">  <!-- LOOP THE COLORS -->
+                                <div class="contactName">${contact['name']}</div>
                                 <div class="contactNumberLabel">Number:</div>
                                 <div class="contactNumber">${contact['number']}</div>
-                                <div class="contactAddressLabel">Address:<span class="contactAddress"> ${contact['address']}</span></div>
-                                <span><img class="deleteBtn" src="Img/delete.svg"></span>
+                                <div class="contactAddressLabel">Address: <span class="contactAddress">${contact['address']}</span></div>
+                                <span><img class="deleteBtn" src="Img/delete.svg" title="Delete Contact"></span>
+                                <span><img class="editBtn" src="Img/edit.svg" title="Edit Contact"> </span>
                             </div>
                         </div>
                     `
@@ -54,7 +55,7 @@ class Contacts {
 class Storage {
     static initializeStorage() {
         if (!(localStorage.getItem('contactsInfo'))) {
-            // Create empty array on first load
+            // Create empty array of first load
             localStorage.setItem('contactsInfo', '[]')
         }
     }
@@ -65,61 +66,45 @@ class Storage {
     static addContact(contactInfo) {
         let contactsInStorage = this.getContacts()
         contactsInStorage.push(contactInfo)
+        // Update localStorage
         localStorage.setItem('contactsInfo', JSON.stringify(contactsInStorage))
     }
-    static deleteContact(contactName, contactNumber) {
-        let contactsInStorage = this.getContacts()
+    static deleteContact(contactNumber) {
 
+        let contactsInStorage = this.getContacts()
         contactsInStorage.forEach((contact, index) => {
-            // Remove contact where name and number match
-            if (contact['name'] === contactName && contact['number'] === contactNumber) {
+            // Remove contact where the number matches
+            if (contact['number'] === contactNumber) {
                 contactsInStorage.splice(index, 1)
             }
         })
         localStorage.setItem('contactsInfo', JSON.stringify(contactsInStorage))
+
     }
+    static editContact(contactNumber, newContactInfo) {
+        let allContacts = this.getContacts()
+
+        allContacts.forEach(contact => {
+            if (contact.number === contactNumber) {
+                contact.name = newContactInfo.name
+                contact.number = newContactInfo.number
+                contact.address = newContactInfo.address
+            }
+        })
+        // Update localStorage
+        localStorage.setItem('contactsInfo', JSON.stringify(allContacts))
+    }
+
 }
 
 class UI {
-    static showAlert(alertText, type) {
-        if (type === undefined || !(['primary', 'warning', 'danger', 'success'].includes(type))) {
-            type = 'primary'
-        }
-        // Create alert div
-        const alertDiv = document.createElement('div')
-        alertDiv.role = 'alert'
-        alertDiv.className = `alert alert-${type}`
-        alertDiv.id = 'alertMessage'
-        alertDiv.style.borderRadius = '10px'
-        alertDiv.textContent = alertText
-        // Adjust style
-        if (type === 'danger') {
-            alertDiv.style.backgroundColor = 'rgb(209,13,13)'
-        }
-        if (type === 'primary') {
-            alertDiv.style.backgroundColor = 'rgb(80, 113, 213)'
-        }
-        if (type === 'success') {
-            alertDiv.style.backgroundColor = 'rgb(76, 180, 40)'
-        }
-        if (type === 'warning') {
-            alertDiv.style.backgroundColor = 'rgb(227, 148, 16)'
-        }
-        // Add Alert
-        document.querySelector('.alert-container').appendChild(alertDiv)
-
-        // Remove alert
-        setTimeout(()=>{alertDiv.remove()}, 3000)
-
-    }
-
     static addContact(contactName, contactNumber, contactAddress) {
         let firstContact = document.querySelector('.contacts-container').firstElementChild
         let contactsContainer = document.querySelector('.contacts-container')
 
         let divBgColor
         if (firstContact !== null) {
-            // Choose color of new contact based on the contact on top
+            // Choose color of new contact based on the color of the contact on top
             switch (firstContact.dataset.color) {
                 case 'darkblue':
                     divBgColor = 'darkorange'
@@ -135,9 +120,10 @@ class UI {
             }
         }
         else {
+            // The default color of the first contact that is added
             divBgColor = 'darkblue'
         }
-        // Create DOM Element
+        // Create  DOM Element
         let div = document.createElement('div')
         div.className = 'detailed-view-container'
         div.dataset.color = divBgColor
@@ -147,33 +133,128 @@ class UI {
                 <div class="contactName">${contactName}</div>
                 <div class="contactNumberLabel">Number:</div>
                 <div class="contactNumber">${contactNumber}</div>
-                <div class="contactAddressLabel">Address:<span class="contactAddress"> ${contactAddress}</span></div>
+                <div class="contactAddressLabel">Address:<span class="contactAddress">${contactAddress}</span></div>
                 <span><img class="deleteBtn" src="Img/delete.svg"></span>
             </div>
         `
-        // Add animation
+        // Add Animation
         div.style.animationName = 'contactAdded'
         div.style.animationDuration = '1s'
         div.style.animationFillMode = 'forwards'
-        // Add Element to div
+        // Add Element To Div
         if (firstContact !== null) {
+            // Puts new contact on the top
             contactsContainer.insertBefore(div, firstContact)
         }
         else {
             document.querySelector('.contacts-container').appendChild(div)
         }
     }
-
     static showContactAddedText() {
         let contactAddedText = document.querySelector('#contactAddedText')
         contactAddedText.style.display = 'block'
+    }
+    static show_or_HideEditBtn(contactNumber, show=true) {
+        let allEditBtn = document.querySelectorAll('.editBtn')
+        let allContacts = Storage.getContacts()
+        let contactIndex
+        let filter
+
+        filter = allContacts.length !== allEditBtn.length;
+
+        if (filter) {
+            allContacts = this.getContactsThatHaveBeenFiltered()
+        }
+
+        // Get the contact index of the contact that was clicked on
+        allContacts.forEach((contact, index) => {
+            if (contact.number === contactNumber) {
+                contactIndex = Math.abs(index - (allContacts.length - 1))
+            }
+        })
+        // Show the edit btn of the contact that was clicked on
+        allEditBtn.forEach((btn, index) => {
+            if (index === contactIndex) {
+                if (show)
+                    btn.style.display = 'block'
+                else
+                    btn.style.display = 'none'
+            }
+        })
+    }
+    static getContactsThatHaveBeenFiltered() {
+
+        let filteredContactsToReturn = []
+
+        let allFilteredContacts = document.querySelectorAll('.contactInfo')
+
+        allFilteredContacts.forEach(contact => {
+            let allChildrenElements = contact.children
+            let contactName = allChildrenElements[0].textContent
+            let contactNumber = allChildrenElements[2].textContent
+
+            filteredContactsToReturn.push({'name': contactName, 'number': contactNumber})
+        })
+
+
+
+        return filteredContactsToReturn.reverse()
+    }
+    static contactIsBeingEdited() {
+        let allContactsInDOM = document.querySelectorAll('.contactInfo')
+
+        let contactBeingEdited = false
+        allContactsInDOM.forEach(contact => {
+            if (contact.innerHTML.includes('edit-contact'))
+                contactBeingEdited = true
+        })
+        return contactBeingEdited
+    }
+    static enterKeyEventFunctionForContactEdit(e, contactName, contactNumber, prevContactNumber, addressDiv, contactAddressLabel) {
+
+        if (e.keyCode === 13) {
+            let newContactName = document.querySelector('.edit-contact-name-input').value
+            let newContactNumber = document.querySelector('.edit-contact-number-input').value
+            let newContactAddress = document.querySelector('.edit-contact-address-input').value
+
+
+            // Contact name style
+            contactName.innerHTML = newContactName
+            contactName.style.marginBottom = '0'
+            // Contact number style
+            contactNumber.innerHTML = newContactNumber
+            contactNumber.style.marginBottom = '0'
+            // Contact address style
+            addressDiv.remove()
+            contactAddressLabel.innerHTML = `Address: <span class="contactAddress">${newContactAddress}</span>`
+            contactAddressLabel.style.position = 'relative'
+
+            // Update contact in storage
+            let newContactInfo = {
+                'name': newContactName,
+                'number': newContactNumber,
+                'address': newContactAddress
+            }
+            Storage.editContact(prevContactNumber, newContactInfo)
+        }
+
     }
     static removeContactAddedText() {
         let contactAddedText = document.querySelector('#contactAddedText')
         contactAddedText.style.display = 'none'
     }
+    static clearFields() {
+        let contactNameField = document.querySelector('#newContactNameField')
+        let contactAddressField = document.querySelector('#newContactAddressField')
+        let contactNumberField = document.querySelector('#newContactNumberField')
 
+        contactNameField.value = ''
+        contactNumberField.value = ''
+        contactAddressField.value = ''
+
+    }
 }
+
 class Animations {
     static animateAddContactContainer() {
         let addContactContainer = document.querySelector('.add-contact-container')
@@ -207,7 +288,7 @@ class Animations {
         contactsContainer.style.animationDuration = '1s'
         contactsContainer.style.animationFillMode = 'forwards'
     }
-    static animateExpandContactInfo(contactName, contactNumberLabel, contactNumber, contactAddressLabel) {
+    static animateExpandContactsInfo(contactName, contactNumberLabel, contactNumber, contactAddressLabel) {
         // Animate Contact Name
         contactName.style.animationName = 'moveContactNameToMiddle'
         contactName.style.animationDuration = '0.5s'
@@ -216,17 +297,16 @@ class Animations {
         contactNumber.style.animationName = 'moveContactNumberToRight'
         contactNumber.style.animationDuration = '0.5s'
         contactNumber.style.animationFillMode = 'forwards'
-        // Animate Number Label
+        // Animate Contact Number Label
         contactNumberLabel.style.animationName = 'makeLabelOpaque'
         contactNumberLabel.style.animationDuration = '1s'
         contactNumberLabel.style.animationFillMode = 'forwards'
         // Animate Contact Address Label
         contactAddressLabel.style.animationName = 'makeLabelOpaque'
-        contactAddressLabel.style.animationDuration = '1s'
+        contactAddressLabel.style.animationDuration = '0.5s'
         contactAddressLabel.style.animationFillMode = 'forwards'
-
-
     }
+
     static animateMinimizeContactInfo(contactName, contactNumberLabel, contactNumber, contactAddressLabel) {
         // Animate Contact Name
         contactName.style.animationName = 'moveContactNameToStart'
@@ -234,9 +314,9 @@ class Animations {
         contactName.style.animationFillMode = 'forwards'
         // Animate Contact Number
         contactNumber.style.animationName = 'moveContactNumberToStart'
-        contactNumber.style.animationDuration = '1s'
+        contactNumber.style.animationDuration = '0.5s'
         contactNumber.style.animationFillMode = 'forwards'
-        // Animate Number Label
+        // Animate Contact Number Label
         contactNumberLabel.style.animationName = 'makeLabelTransparent'
         contactNumberLabel.style.animationDuration = '0.5s'
         contactNumberLabel.style.animationFillMode = 'forwards'
@@ -249,43 +329,40 @@ class Animations {
         contactToDelete.style.animationName = 'contactDeleted'
         contactToDelete.style.animationDuration = '1s'
         contactToDelete.style.animationFillMode = 'forwards'
-
     }
 
 }
-// DomContentLoaded
+
+// DOM LOADED
 document.addEventListener('DOMContentLoaded', () => {
     Storage.initializeStorage()
     Contacts.loadContacts(null)
 })
 
-
 // ONKEY-UP EVENTS
 
 /* SEARCH NAME INPUT */
-document.querySelector('#searchNameInput').addEventListener('keyup', function () {
+document.querySelector('#searchNameInput').addEventListener('keyup', function() {
     Contacts.loadContacts(this.value)
 })
 /* ADD NEW CONTACT FORM */
-document.querySelector('#addNewContactForm').addEventListener('keyup', function () {
+document.querySelector('#addNewContactForm').addEventListener('keyup', function() {
     let contactNameField = document.querySelector('#newContactNameField')
     let contactAddressField = document.querySelector('#newContactAddressField')
     let contactNumberField = document.querySelector('#newContactNumberField')
     let addContactBtn = document.querySelector('#addContactBtn')
-    // Validate form
+    // Validate Form
     if (contactNameField.value === '' || contactAddressField.value === '' || contactNumberField.value === '') {
         addContactBtn.disabled = true
     }
     else {
         addContactBtn.disabled = false
     }
-
-
 })
 
 // ONCLICK EVENTS
 
-/* ADD NEW CONTACT IMG */
+/* ADD NEW CONTACT IMG BTN */
 document.querySelector('#addNewContactBtn').addEventListener('click', function () {
     let addContactContainer = document.querySelector('.add-contact-container')
     if (addContactContainer.style.display === 'block') {
@@ -296,55 +373,50 @@ document.querySelector('#addNewContactBtn').addEventListener('click', function (
         Animations.animateMoveContactsDown()
         Animations.animateAddContactContainer()
     }
-
 })
-/* ADD CONTACT */
-document.querySelector('#addContactBtn').addEventListener('click', function () {
+/* ADD CONTACT FORM BTN */
+document.querySelector('#addContactBtn').addEventListener('click', function() {
     let contactNameField = document.querySelector('#newContactNameField')
     let contactAddressField = document.querySelector('#newContactAddressField')
     let contactNumberField = document.querySelector('#newContactNumberField')
     let contactInfo = {'name': contactNameField.value, 'address': contactAddressField.value, 'number': contactNumberField.value}
 
     UI.showContactAddedText()
-    UI.addContact(contactNameField.value, contactNumberField.value, contactAddressField.value)
+    UI.addContact(contactInfo['name'], contactInfo['number'], contactInfo['address'])
     Storage.addContact(contactInfo)
 
     setTimeout(() => {
         Animations.animateRemoveAddContainer()
         Animations.animateMoveContactsUp()
         UI.removeContactAddedText()
-
     }, 1500)
 
-
-    // Clear Fields
-    contactNameField.value = ''
-    contactAddressField.value = ''
-    contactNumberField.value = ''
+    UI.clearFields()
     // Reset Button
     this.disabled = true
 
 })
-/* CONTACT CONTAINER-EXPAND */
+
+/* EXPAND CONTACT AND MINIMIZE CONTAINER */
 var expanded = false
 var contactName
 var contactNumber
 var contactNumberLabel
 var contactAddressLabel
-document.querySelector('.contacts-container').addEventListener('click', (e)=> {
+document.querySelector('.contacts-container').addEventListener('click', (e) => {
     if (expanded) {
-        // Minimize Contact Info
+        /* Minimize Contact Info */
         if (e.target.className === 'contactName' || e.target.className === 'contactNumber') {
             expanded = true
             if (e.target.className === 'contactName') {
-                // Use event propagation to get to the relevant contact info
+                // Use event propagation to get the contact that was clicked
                 contactName = e.target
                 contactNumberLabel = e.target.nextElementSibling
                 contactNumber = e.target.nextElementSibling.nextElementSibling
                 contactAddressLabel = e.target.nextElementSibling.nextElementSibling.nextElementSibling
             }
             else if (e.target.className === 'contactNumber') {
-                // Use event propagation to get to the relevant contact info
+                // Use event propagation to get the contact that was clicked
                 contactName = e.target.previousElementSibling.previousElementSibling
                 contactNumberLabel = e.target.previousElementSibling
                 contactNumber = e.target
@@ -352,56 +424,99 @@ document.querySelector('.contacts-container').addEventListener('click', (e)=> {
             }
             Animations.animateMinimizeContactInfo(contactName, contactNumberLabel, contactNumber, contactAddressLabel)
 
+            UI.show_or_HideEditBtn(contactNumber.textContent, false)
         }
-
         expanded = false
         return
     }
     if (!expanded) {
-        // Expand contact info
+        /* Expand Contact Info */
         if (e.target.className === 'contactName' || e.target.className === 'contactNumber') {
             expanded = true
             if (e.target.className === 'contactName') {
-                // Use event propagation to get to the relevant contact info
+                // Use event propagation to get the contact that was clicked
                 contactName = e.target
                 contactNumberLabel = e.target.nextElementSibling
                 contactNumber = e.target.nextElementSibling.nextElementSibling
+                // console.log(contactNumber)
                 contactAddressLabel = e.target.nextElementSibling.nextElementSibling.nextElementSibling
-            }
-            else if (e.target.className === 'contactNumber') {
-                // Use event propagation to get to the relevant contact info
+            } else if (e.target.className === 'contactNumber') {
+                // Use event propagation to get the contact that was clicked
                 contactName = e.target.previousElementSibling.previousElementSibling
                 contactNumberLabel = e.target.previousElementSibling
                 contactNumber = e.target
                 contactAddressLabel = e.target.nextElementSibling
             }
-            Animations.animateExpandContactInfo(contactName, contactNumberLabel, contactNumber, contactAddressLabel)
+            Animations.animateExpandContactsInfo(contactName, contactNumberLabel, contactNumber, contactAddressLabel)
+            UI.show_or_HideEditBtn(contactNumber.textContent, true)
+            // console.log(contactNumber.textContent)
 
         }
     }
-
 })
 
-/* CONTACT CONTAINER-DELETE CONTACT */
+/* DELETE CONTACT OR EDIT CONTACT */
+var contactNameToEdit
+var contactNumberToEdit
+var contactAddressLabelToEdit
+var addressDiv
+var contactNumberText
 document.querySelector('.contacts-container').addEventListener('click', (e) => {
-    if (e.target.className === 'deleteBtn') {
+
+
+    if (e.target.className === 'editBtn' && !(UI.contactIsBeingEdited()) ) {
+        let contactToEdit = e.target.parentElement.parentElement
+
+        let detailedViewContainer = contactToEdit.parentElement
+
+        let inputColor = detailedViewContainer.dataset.color
+
+        contactNameToEdit = contactToEdit.firstElementChild
+        let contactNameText = contactNameToEdit.textContent
+        contactNumberToEdit = contactNameToEdit.nextElementSibling.nextElementSibling
+        contactNumberText = contactNumberToEdit.textContent
+        let contactAddress = contactNumberToEdit.nextElementSibling.firstElementChild
+        let contactAddressText = contactAddress.textContent
+
+        contactAddressLabelToEdit = contactNumberToEdit.nextElementSibling
+        let deleteBtnSpan = contactAddressLabelToEdit.nextElementSibling
+
+
+        // Style fields
+        contactNameToEdit.style.marginBottom = '10px'
+        contactNumberToEdit.style.marginBottom = '10px'
+
+
+        // Create Address Input
+        contactAddressLabelToEdit.innerHTML = 'Address: '
+        contactAddressLabelToEdit.style.position = 'absolute'
+        addressDiv = document.createElement('div')
+        addressDiv.className = 'contactAddress'
+        addressDiv.style.left = '12%'
+
+        /* Add inputs */
+
+        contactNameToEdit.innerHTML = `<input class="form-control edit-contact-name-input" value="${contactNameText}" onkeyup="UI.enterKeyEventFunctionForContactEdit(event, contactNameToEdit, contactNumberToEdit, contactNumberText, addressDiv, contactAddressLabelToEdit)" style="background-color: ${inputColor}; color: white">`
+        contactNumberToEdit.innerHTML = `<input class="form-control edit-contact-number-input" value="${contactNumberText}" onkeyup="UI.enterKeyEventFunctionForContactEdit(event, contactNameToEdit, contactNumberToEdit, contactNumberText, addressDiv, contactAddressLabelToEdit)" style="background-color: ${inputColor}; color: white">`
+        addressDiv.innerHTML = `<input class="form-control edit-contact-address-input" onkeyup="UI.enterKeyEventFunctionForContactEdit(event, contactNameToEdit, contactNumberToEdit, contactNumberText, addressDiv, contactAddressLabelToEdit)" value="${contactAddressText}" autocomplete="chrome-off" style="background-color: ${inputColor}; color: white">`
+        contactToEdit.insertBefore(addressDiv, deleteBtnSpan)
+
+
+
+    }
+    else if (e.target.className === 'deleteBtn') {
         let contactToDelete = e.target.parentElement.parentElement.parentElement
         let contactName = contactToDelete.firstElementChild.firstElementChild.textContent
         let contactNumber = contactToDelete.firstElementChild.firstElementChild.nextElementSibling.nextElementSibling.textContent
 
         Animations.animateDeleteContact(contactToDelete)
 
-
         contactToDelete.addEventListener('animationend', () => {
             contactToDelete.remove()
-            Storage.deleteContact(contactName, contactNumber)
-
+            Storage.deleteContact(contactNumber)
         })
-
-
     }
 })
-
 
 function wordsMatch(word1, word2, matchCase=false) {
     if (!matchCase) {
@@ -427,6 +542,5 @@ function wordsMatch(word1, word2, matchCase=false) {
         return true
 
     }
-
 }
 

@@ -157,6 +157,28 @@
     margin-bottom: 0;
 
 }
+.editBtn {
+    /*position: relative;*/
+    display: none;
+    cursor: pointer;
+    margin-top: 2px;
+    width: 40px;
+    height: 40px;
+}
+.edit-contact-name-input {
+    border: 1px solid black;
+    border-radius: 15px;
+    width: 40%;
+}
+.edit-contact-number-input, .edit-contact-address-input  {
+    border: 1px solid black;
+    border-radius: 15px;
+    width: 30%;
+}
+.edit-contact-address-input {
+    /*left: 50%;*/
+}
+
 #newContactNameField, #newContactNumberField, #newContactAddressField {
     border-radius: 7px;
     margin-bottom: 1%;
@@ -181,6 +203,7 @@
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     color: white;
     text-decoration: none;
+    cursor: pointer;
 }
 .contactName, .contactNameTest {
     font-weight: 600;
